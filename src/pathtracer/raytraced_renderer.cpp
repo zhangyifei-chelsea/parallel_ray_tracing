@@ -77,6 +77,7 @@ RaytracedRenderer::RaytracedRenderer(size_t ns_aa,
 
   bvh = NULL;
   grids = NULL;
+  kdtree = NULL;
   scene = NULL;
   camera = NULL;
 
@@ -96,6 +97,8 @@ RaytracedRenderer::~RaytracedRenderer() {
       delete bvh;
   if(grids != NULL)
       delete grids;
+  if(kdtree != NULL)
+      delete kdtree;
   delete pt;
 
 }
@@ -119,6 +122,8 @@ void RaytracedRenderer::set_scene(Scene *scene) {
           delete bvh;
       if(grids != NULL)
           delete grids;
+      if(kdtree != NULL)
+          delete kdtree;
     selectionHistory.pop();
   }
 
@@ -127,7 +132,7 @@ void RaytracedRenderer::set_scene(Scene *scene) {
   }
 
   this->scene = scene;
-  build_accel(GRID);
+  build_accel(KDTREE);
 
   if (has_valid_configuration()) {
     state = READY;
@@ -251,8 +256,11 @@ void RaytracedRenderer::clear() {
       delete bvh;
   if(grids != NULL)
       delete grids;
+  if(kdtree != NULL)
+      delete kdtree;
   bvh = NULL;
   grids = NULL;
+  kdtree = NULL;
   scene = NULL;
   camera = NULL;
   selectionHistory.pop();
@@ -294,6 +302,7 @@ void RaytracedRenderer::start_raytracing() {
 
   pt->bvh = bvh;
   pt->grids = grids;
+  pt->kdtree = kdtree;
   pt->camera = camera;
   pt->scene = scene;
 
@@ -337,6 +346,9 @@ void RaytracedRenderer::start_raytracing() {
   }
   if (grids != NULL) {
       grids->total_isects = 0; grids->total_rays = 0;
+  }
+  if (kdtree != NULL) {
+      kdtree->total_isects = 0; kdtree->total_rays = 0;
   }
 
   // launch threads
@@ -396,6 +408,11 @@ void RaytracedRenderer::build_accel(int type) {
       grids = new GridAccel(primitives, primitive_size * 27);
       timer.stop();
       fprintf(stdout, "Done! Building grids in (%.4f sec)\n", timer.duration());
+  }
+  else if (type == KDTREE) {
+      kdtree = new KDTreeAccel(primitives);
+      timer.stop();
+      fprintf(stdout, "Done! Building KDTree in (%.4f sec)\n", timer.duration());
   }
 }
 
@@ -714,6 +731,10 @@ void RaytracedRenderer::worker_thread() {
     else if (grids != NULL) {
         fprintf(stdout, "\r[PathTracer] Rendering... 100%%! (%.4fs)\n", timer.duration());
         fprintf(stdout, "[PathTracer] BVH traced %llu rays.\n", grids->total_rays);
+    }
+    else if (kdtree != NULL) {
+        fprintf(stdout, "\r[PathTracer] Rendering... 100%%! (%.4fs)\n", timer.duration());
+        fprintf(stdout, "[PathTracer] BVH traced %llu rays.\n", kdtree->total_rays);
     }
 
     lock_guard<std::mutex> lk(m_done);

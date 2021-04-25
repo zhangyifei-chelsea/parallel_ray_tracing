@@ -32,6 +32,7 @@ namespace CGL {
     void PathTracer::clear() {
         bvh = NULL;
         grids = NULL;
+        kdtree = NULL;
         scene = NULL;
         camera = NULL;
         sampleBuffer.clear();
@@ -93,6 +94,10 @@ namespace CGL {
                 Vector3D L = intersection.bsdf->get_emission();
                 L_i += L * isect.bsdf->f(w_out, w_in) * cos_theta(w_in) / pdf;
             }
+            else if (kdtree != NULL && kdtree->intersect(target_ray, &intersection)) {
+                Vector3D L = intersection.bsdf->get_emission();
+                L_i += L * isect.bsdf->f(w_out, w_in) * cos_theta(w_in) / pdf;
+            }
         }
         L_out = L_i / num_samples;
         return L_out;
@@ -141,6 +146,9 @@ namespace CGL {
                     L_in += isect.bsdf->f(w_out, w_in) * cos_theta(w_in) * v / pdf;
                 }
                 else if (grids != NULL && !(grids->has_intersection(target_ray))){
+                    L_in += isect.bsdf->f(w_out, w_in) * cos_theta(w_in) * v / pdf;
+                }
+                else if (kdtree != NULL && !(kdtree->has_intersection(target_ray))){
                     L_in += isect.bsdf->f(w_out, w_in) * cos_theta(w_in) * v / pdf;
                 }
             }
@@ -200,6 +208,10 @@ namespace CGL {
                 Vector3D next = at_least_one_bounce_radiance(bounce, intersection);
                 L_out = L_out + next * cos_theta(w_in) * v / pdf / terminationProb;
             }
+            else if (kdtree != NULL && kdtree->intersect(bounce, &intersection)) {
+                Vector3D next = at_least_one_bounce_radiance(bounce, intersection);
+                L_out = L_out + next * cos_theta(w_in) * v / pdf / terminationProb;
+            }
         }
         return L_out;
     }
@@ -221,6 +233,8 @@ namespace CGL {
         if (bvh != NULL && !bvh->intersect(r, &isect))
             return envLight ? envLight->sample_dir(r) : L_out;
         else if (grids != NULL && !grids->intersect(r, &isect))
+            return envLight ? envLight->sample_dir(r) : L_out;
+        else if (kdtree != NULL && !kdtree->intersect(r, &isect))
             return envLight ? envLight->sample_dir(r) : L_out;
 
         L_out = (isect.t == INF_D) ? debug_shading(r.d) : normal_shading(isect.n);
@@ -296,6 +310,8 @@ namespace CGL {
             bvh->intersect(r, &isect);
         else if(grids != NULL)
             grids->intersect(r, &isect);
+        else if(kdtree != NULL)
+            kdtree->intersect(r, &isect);
 
         camera->focalDistance = isect.t;
     }

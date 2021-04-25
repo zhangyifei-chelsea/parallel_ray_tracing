@@ -32,7 +32,7 @@ set(APPLICATION_3_1_SOURCE
     src/pathtracer/camera.cpp
     src/pathtracer/bsdf.cpp
     src/pathtracer/pathtracer.cpp
-)
+        src/scene/kdtree.cpp src/scene/kdtree.h)
 
 set(APPLICATION_3_2_SOURCE
     src/scene/object.cpp

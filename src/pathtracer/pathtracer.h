@@ -5,6 +5,7 @@
 
 #include "scene/bvh.h"
 #include "scene/grids.h"
+#include "scene/kdtree.h"
 #include "pathtracer/sampler.h"
 #include "pathtracer/intersection.h"
 
@@ -19,6 +20,7 @@ using CGL::SceneObjects::EnvironmentLight;
 using CGL::SceneObjects::BVHNode;
 using CGL::SceneObjects::BVHAccel;
 using CGL::SceneObjects::GridAccel;
+using CGL::SceneObjects::KDTreeAccel;
 
 namespace CGL {
 
@@ -87,6 +89,7 @@ namespace CGL {
 
         BVHAccel* bvh;                 ///< BVH accelerator aggregate
         GridAccel* grids;                 ///< Grid accelerator aggregate
+        KDTreeAccel* kdtree;                 ///< Grid accelerator aggregate
         EnvironmentLight* envLight;    ///< environment map
         Sampler2D* gridSampler;        ///< samples unit grid
         Sampler3D* hemisphereSampler;  ///< samples unit hemisphere

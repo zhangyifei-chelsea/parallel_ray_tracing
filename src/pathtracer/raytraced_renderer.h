@@ -13,6 +13,7 @@
 
 #include "scene/bvh.h"
 #include "scene/grids.h"
+#include "scene/kdtree.h"
 #include "pathtracer/camera.h"
 #include "pathtracer/sampler.h"
 #include "util/image.h"
@@ -224,7 +225,8 @@ public:
   // Components //
 
   BVHAccel* bvh;                 ///< BVH accelerator aggregate
-  GridAccel* grids;                 ///< BVH accelerator aggregate
+  GridAccel* grids;                 ///< Grid accelerator aggregate
+  KDTreeAccel* kdtree;                 ///< KD accelerator aggregate
   ImageBuffer frameBuffer;       ///< frame buffer
   Timer timer;                   ///< performance test timer
 
